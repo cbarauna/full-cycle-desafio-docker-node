@@ -1,0 +1,54 @@
+version: '3'
+
+services:
+  dbmysql:
+    image: mysql:8.1
+    command: --default-authentication-plugin=mysql_native_password
+    container_name: dbmysql
+    restart: always
+    tty: true
+    environment:
+      - MYSQL_DATABASE=mydb
+      - MYSQL_ROOT_PASSWORD=root
+    volumes:
+      - ./database:/var/lib/mysql
+    networks:
+      - full-cycle-network
+
+
+  webserver:
+    build:
+      context: nginx
+    container_name: webserver
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    volumes:
+      - ./nginx/web-root:/var/www/html
+      - ./nginx/nginx-conf:/etc/nginx/conf.d
+    depends_on:
+      - node
+    networks:
+      - full-cycle-network
+
+  node:
+    build:
+      context: app
+    container_name: node
+    hostname: node_server
+    networks:
+      - full-cycle-network
+    tty: true
+    volumes:
+      - ./app:/usr/src/app
+    ports:
+      - '3000:3000'
+    depends_on:
+      - dbmysql
+
+
+networks:
+  full-cycle-network:
+    driver: bridge
+
+
