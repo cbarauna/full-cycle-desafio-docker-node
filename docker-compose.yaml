@@ -14,7 +14,21 @@ services:
       - ./database:/var/lib/mysql
     networks:
       - full-cycle-network
-
+  nodeserver:
+    build:
+      context: app
+    container_name: nodeserver
+    entrypoint: wait-for dbmysql:3306 -t 40 -- npm start
+    hostname: nodeserver
+    networks:
+      - full-cycle-network
+    tty: true
+    volumes:
+      - ./app:/usr/src/app
+    ports:
+      - '3000:3000'
+    depends_on:
+      - dbmysql
 
   webserver:
     build:
@@ -27,24 +41,9 @@ services:
       - ./nginx/web-root:/var/www/html
       - ./nginx/nginx-conf:/etc/nginx/conf.d
     depends_on:
-      - node
+      - nodeserver
     networks:
       - full-cycle-network
-
-  node:
-    build:
-      context: app
-    container_name: node
-    hostname: node_server
-    networks:
-      - full-cycle-network
-    tty: true
-    volumes:
-      - ./app:/usr/src/app
-    ports:
-      - '3000:3000'
-    depends_on:
-      - dbmysql
 
 
 networks:
